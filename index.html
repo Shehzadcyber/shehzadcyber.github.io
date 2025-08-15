@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Shehzad Ali | Cybersecurity Portfolio</title>
 <style>
-  body { margin:0; background-color:black; color:#00ff99; font-family:'Courier New',monospace; overflow:hidden; }
+  body { margin:0; background:black; color:#00ff99; font-family:'Courier New',monospace; overflow:hidden; }
   #terminal { padding:20px; white-space:pre-wrap; line-height:1.5; font-size:1.1rem; text-shadow:0 0 5px #00ff99; display:none; }
   .cursor { display:inline-block; width:10px; background-color:#00ff99; animation:blink 0.8s infinite; }
   @keyframes blink {0%,50%,100%{background-color:#00ff99;}25%,75%{background-color:transparent;}}
@@ -21,8 +22,10 @@
 <div id="start-screen">Press any key to start</div>
 <div id="terminal"></div>
 
-<audio id="type-sound" src="sound/typing.mp3" preload="auto"></audio>
-<audio id="beep-sound" src="sound/beep.mp3" preload="auto"></audio>
+<!-- Typing sound (loops) -->
+<audio id="type-sound" src="https://github.com/naptha/talkie/raw/master/sounds/keyboard.mp3" preload="auto"></audio>
+<!-- Beep sound -->
+<audio id="beep-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
 <script>
 const script = [
@@ -43,14 +46,18 @@ const tSound = document.getElementById("type-sound");
 const bSound = document.getElementById("beep-sound");
 
 function typeCommand(command, callback) {
+  if (charIndex === 0) { // start typing sound
+    tSound.currentTime = 0;
+    tSound.loop = true;
+    tSound.play();
+  }
   if (charIndex < command.length) {
     output += command[charIndex++];
     term.innerHTML = output + '<span class="cursor"></span>';
-    if (tSound.paused) { tSound.currentTime = 0; tSound.play(); }
     setTimeout(() => typeCommand(command, callback), 30 + Math.random() * 70);
   } else {
-    tSound.pause();
-    output += "\n\n"; // Add blank line after command
+    tSound.pause(); // stop sound after typing
+    output += "\n\n";
     term.innerHTML = output + '<span class="cursor"></span>';
     callback();
   }
@@ -76,17 +83,19 @@ function runStep() {
   } 
   else if (step.type === "command") {
     typeCommand(">> " + step.text, () => {
-      const lines = step.output.split("\n");
-      lines.forEach(line => {
-        const fadeLine = document.createElement("div");
-        fadeLine.classList.add("fade-in");
-        fadeLine.style.marginBottom = "5px"; // Slight gap between lines
-        fadeLine.textContent = line;
-        term.appendChild(fadeLine);
-      });
-      output += step.output + "\n\n"; // Extra blank line after output
-      stepIndex++;
-      setTimeout(runStep, 500);
+      setTimeout(() => { // small delay before showing output
+        const lines = step.output.split("\n");
+        lines.forEach(line => {
+          const fadeLine = document.createElement("div");
+          fadeLine.classList.add("fade-in");
+          fadeLine.style.marginBottom = "5px";
+          fadeLine.textContent = line;
+          term.appendChild(fadeLine);
+        });
+        output += step.output + "\n\n";
+        stepIndex++;
+        setTimeout(runStep, 500);
+      }, 200);
     });
   }
 }
