@@ -12,15 +12,7 @@
         font-family: 'Courier New', monospace;
         overflow: hidden;
     }
-    canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 0;
-    }
     #terminal {
-        position: relative;
-        z-index: 1;
         padding: 20px;
         white-space: pre-wrap;
         line-height: 1.5;
@@ -58,57 +50,24 @@
         font-size: 1.5rem;
         text-shadow: 0 0 5px #00ff99;
         z-index: 2;
-        animation: blinkText 1.2s infinite;
+        animation: fadeInOut 1.5s infinite;
         cursor: pointer;
     }
-    @keyframes blinkText {
-        0%, 50%, 100% { opacity: 1; }
-        25%, 75% { opacity: 0; }
+    @keyframes fadeInOut {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
     }
 </style>
 </head>
 <body>
 
-<canvas id="matrix"></canvas>
 <div id="start-screen">Press any key to start</div>
 <div id="terminal"></div>
 
-<audio id="type-sound" src="https://audio-previews.elements.envatousercontent.com/files/365193348/preview.mp3" preload="auto"></audio>
+<audio id="type-sound" src="https://www.soundjay.com/mechanical/keyboard-1.mp3" preload="auto"></audio>
+<audio id="beep-sound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
 
 <script>
-// ===== Matrix Background =====
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
-
-canvas.height = window.innerHeight;
-canvas.width = window.innerWidth;
-
-const letters = "アァイィウヴエェオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤユヨラリルレロワンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const matrix = letters.split("");
-
-const fontSize = 14;
-const columns = canvas.width / fontSize;
-const drops = Array(Math.floor(columns)).fill(1);
-
-function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#00ff99";
-    ctx.font = fontSize + "px monospace";
-
-    for (let i = 0; i < drops.length; i++) {
-        const text = matrix[Math.floor(Math.random() * matrix.length)];
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-            drops[i] = 0;
-        }
-        drops[i]++;
-    }
-}
-setInterval(drawMatrix, 35);
-
 // ===== Boot Sequence =====
 const bootSequence = [
     "[BOOT] Initializing cyber terminal...",
@@ -180,7 +139,8 @@ document.addEventListener("click", startTerminal);
 function startTerminal() {
     document.getElementById("start-screen").style.display = "none";
     document.getElementById("terminal").style.display = "block";
-    typeLine();
+    document.getElementById("beep-sound").play();
+    setTimeout(typeLine, 500);
     document.removeEventListener("keydown", startTerminal);
     document.removeEventListener("click", startTerminal);
 }
