@@ -50,7 +50,7 @@ function typeCommand(command, callback) {
     setTimeout(() => typeCommand(command, callback), 30 + Math.random() * 70);
   } else {
     tSound.pause();
-    output += "\n";
+    output += "\n\n"; // Add blank line after command
     term.innerHTML = output + '<span class="cursor"></span>';
     callback();
   }
@@ -80,10 +80,11 @@ function runStep() {
       lines.forEach(line => {
         const fadeLine = document.createElement("div");
         fadeLine.classList.add("fade-in");
+        fadeLine.style.marginBottom = "5px"; // Slight gap between lines
         fadeLine.textContent = line;
         term.appendChild(fadeLine);
       });
-      output += step.output + "\n";
+      output += step.output + "\n\n"; // Extra blank line after output
       stepIndex++;
       setTimeout(runStep, 500);
     });
