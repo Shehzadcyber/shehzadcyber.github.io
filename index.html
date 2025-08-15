@@ -22,7 +22,7 @@
 </head>
 <body>
 
-<div id="start-screen">Press any key to start</div>
+<div id="start-screen">Press ENTER to start</div>
 
 <div id="terminal1" class="terminal"></div>
 <div id="terminal2" class="terminal"></div>
@@ -68,18 +68,18 @@ const scripts = {
       "ASP",
       "CAPen",
       "On Progress: OSCP, CPTS, CREST Certs"
+    ]},
+    { cmd: "ls projects/", output: [
+      "JS Endpoint Extractor",
+      "NPM-Dependency-Confusion-Attack-RCE-Payload",
+      "XSS-Finder",
+      "Some Projects are Under Processing"
+    ]},
+    { cmd: "contact_me --pentest", output: [
+      "Email: shehzadinfosec@gmail.com",
+      "X: https://x.com/TheRoyHunter313",
+      "LinkedIn: https://www.linkedin.com/in/shehzadali1337/"
     ]}
-  ],
-  projects: [
-    "JS Endpoint Extractor",
-    "NPM-Dependency-Confusion-Attack-RCE-Payload",
-    "XSS-Finder",
-    "Some Projects are Under Processing"
-  ],
-  contact: [
-    "Email: shehzadinfosec@gmail.com",
-    "X: https://x.com/TheRoyHunter313",
-    "LinkedIn: https://www.linkedin.com/in/shehzadali1337/"
   ]
 };
 
@@ -93,7 +93,6 @@ function playKeySound() {
 function flickerMessage(term, text, callback) {
   let flickerCount = 0;
   const maxFlicker = 5;
-  let output = "";
   function flick() {
     if(flickerCount >= maxFlicker) {
       term.innerHTML += text + "\n";
@@ -109,7 +108,7 @@ function flickerMessage(term, text, callback) {
 
 function typeCommand(term, command, outputData, callback) {
   let charIndex = 0;
-  let output = "";
+  let output = term.innerHTML;
   function typeChar() {
     if(charIndex < command.length) {
       output += command[charIndex++];
@@ -117,7 +116,7 @@ function typeCommand(term, command, outputData, callback) {
       playKeySound();
       setTimeout(typeChar, 30 + Math.random() * 50);
     } else {
-      term.innerHTML = output + '<span class="cursor"></span>\n\n';
+      term.innerHTML = output + '<span class="cursor"></span>\n';
       if(Array.isArray(outputData)) {
         const ul = document.createElement("ul");
         ul.className = "skills-list fade-in";
@@ -129,10 +128,11 @@ function typeCommand(term, command, outputData, callback) {
         term.appendChild(ul);
       } else {
         const div = document.createElement("div");
-        div.className = "fade-in";
-        div.textContent = outputData;
+        div.className="fade-in";
+        div.textContent=outputData;
         term.appendChild(div);
       }
+      term.innerHTML += "\n"; 
       setTimeout(callback, 400);
     }
   }
@@ -145,51 +145,35 @@ function runBoot(index=0) {
 }
 
 function runCommands(index=0) {
-  if(index >= scripts.commands.length) { runProjects(); return; }
+  if(index >= scripts.commands.length) { return; }
   const step = scripts.commands[index];
-  typeCommand(terminals.commands, "root@hunter313:~$ "+step.cmd, step.output, ()=>{ setTimeout(()=>runCommands(index+1),400); });
+  // Determine which terminal to print the command and output
+  let term = terminals.commands;
+  if(step.cmd.includes("projects")) term = terminals.projects;
+  else if(step.cmd.includes("contact")) term = terminals.contact;
+  else if(step.cmd.includes("skills")) term = terminals.commands;
+
+  typeCommand(term, "root@hunter313:~$ "+step.cmd, step.output, ()=>{ setTimeout(()=>runCommands(index+1),400); });
 }
 
-function runProjects() {
-  const term = terminals.projects;
-  scripts.projects.forEach(p=>{
-    const div = document.createElement("div");
-    div.className="fade-in";
-    div.textContent=p;
-    term.appendChild(div);
-  });
-  setTimeout(runContact,500);
-}
-
-function runContact() {
-  const term = terminals.contact;
-  scripts.contact.forEach(c=>{
-    const div = document.createElement("div");
-    div.className="fade-in";
-    div.textContent=c;
-    term.appendChild(div);
-  });
-  setTimeout(()=>{term.innerHTML += "\nPress any key to restart...<span class='cursor'></span>"; document.addEventListener("keydown", resetTerminal); document.addEventListener("click", resetTerminal); }, 500);
-}
-
-function startTerminal() {
+function startTerminal(e) {
+  if(e.key !== "Enter") return; // Only ENTER starts
   document.getElementById("start-screen").style.display="none";
   Object.values(terminals).forEach(t=>t.style.display="block");
   document.removeEventListener("keydown", startTerminal);
-  document.removeEventListener("click", startTerminal);
   document.getElementById("beep-sound").play();
   setTimeout(()=>runBoot(),500);
 }
 
-function resetTerminal() {
-  document.removeEventListener("keydown", resetTerminal);
-  document.removeEventListener("click", resetTerminal);
+function resetTerminal(e) {
+  if(e.key !== "Enter") return; // Only ENTER resets
   Object.values(terminals).forEach(t=>t.innerHTML="");
   setTimeout(()=>runBoot(),500);
 }
 
 document.addEventListener("keydown", startTerminal);
-document.addEventListener("click", startTerminal);
+document.addEventListener("keydown", resetTerminal);
 </script>
+
 </body>
 </html>
