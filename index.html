@@ -22,8 +22,8 @@
 <div id="start-screen">Press any key to start</div>
 <div id="terminal"></div>
 
-<!-- Typing sound (loops) -->
-<audio id="type-sound" src="https://github.com/naptha/talkie/raw/master/sounds/keyboard.mp3" preload="auto"></audio>
+<!-- Keystroke sound -->
+<audio id="key-sound" src="https://github.com/naptha/talkie/raw/master/sounds/keyboard.mp3" preload="auto"></audio>
 <!-- Beep sound -->
 <audio id="beep-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
@@ -42,21 +42,23 @@ const script = [
 
 let stepIndex = 0, charIndex = 0, output = "";
 const term = document.getElementById("terminal");
-const tSound = document.getElementById("type-sound");
+const keySound = document.getElementById("key-sound");
 const bSound = document.getElementById("beep-sound");
 
+function playKeySound() {
+  const sound = keySound.cloneNode(); // clone so multiple can overlap
+  sound.playbackRate = 0.9 + Math.random() * 0.3; // random pitch
+  sound.volume = 0.4;
+  sound.play();
+}
+
 function typeCommand(command, callback) {
-  if (charIndex === 0) { // start typing sound
-    tSound.currentTime = 0;
-    tSound.loop = true;
-    tSound.play();
-  }
   if (charIndex < command.length) {
     output += command[charIndex++];
     term.innerHTML = output + '<span class="cursor"></span>';
+    playKeySound();
     setTimeout(() => typeCommand(command, callback), 30 + Math.random() * 70);
   } else {
-    tSound.pause(); // stop sound after typing
     output += "\n\n";
     term.innerHTML = output + '<span class="cursor"></span>';
     callback();
@@ -83,7 +85,7 @@ function runStep() {
   } 
   else if (step.type === "command") {
     typeCommand(">> " + step.text, () => {
-      setTimeout(() => { // small delay before showing output
+      setTimeout(() => {
         const lines = step.output.split("\n");
         lines.forEach(line => {
           const fadeLine = document.createElement("div");
