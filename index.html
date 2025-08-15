@@ -16,7 +16,7 @@ body { margin:0; background:black; color:#00ff99; font-family:'Courier New',mono
 .fade-in { opacity:0; animation:fadeIn 0.3s forwards; }
 @keyframes fadeIn { to { opacity:1; } }
 .glow { text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99; transition: text-shadow 0.5s ease-out; }
-ul.skills-list { list-style-type: "✔ "; padding-left: 20px; }
+ul.skills-list { list-style-type: "✔ "; padding-left: 20px; margin:0; }
 </style>
 </head>
 <body>
@@ -58,7 +58,7 @@ const scripts = {
       "Thick Client Applications Pentesting",
       "Red Teaming",
       "Currently learning Web3, Purple Teaming & Next-Gen Security"
-    ], term:"commands" },
+    ], term:"commands", isSkills:true },
     { cmd: "cat certificates.txt", output: [
       "eCPPT","eWAPTX","ASCP","CEH","ASP","CAPen",
       "On Progress: OSCP, CPTS, CREST Certs"
@@ -105,7 +105,7 @@ function flickerMessage(termObj, text, callback){
   flick();
 }
 
-function typeCommand(termObj, command, outputData, callback){
+function typeCommand(termObj, command, outputData, callback, isSkills=false){
   let charIndex=0;
   const cursorSpan='<span class="cursor"></span>';
   let output=termObj.output;
@@ -121,20 +121,24 @@ function typeCommand(termObj, command, outputData, callback){
       termObj.el.innerHTML=termObj.output;
       // output block
       if(Array.isArray(outputData)){
-        const ul=document.createElement("ul");
-        ul.className="skills-list fade-in";
-        outputData.forEach(item=>{
-          const li=document.createElement("li");
-          li.textContent=item;
-          ul.appendChild(li);
-        });
-        termObj.el.appendChild(ul);
-        termObj.output+="\n";
+        if(isSkills){
+          const ul=document.createElement("ul");
+          ul.className="skills-list fade-in";
+          outputData.forEach(item=>{
+            const li=document.createElement("li");
+            li.textContent=item;
+            ul.appendChild(li);
+          });
+          termObj.el.appendChild(ul);
+          termObj.output+="\n";
+        } else {
+          termObj.output += outputData.join("\n") + "\n\n";
+          termObj.el.innerHTML=termObj.output;
+        }
       }else{
-        termObj.el.innerHTML+=outputData+"\n";
-        termObj.output+=outputData+"\n";
+        termObj.output += outputData + "\n\n";
+        termObj.el.innerHTML=termObj.output;
       }
-      termObj.output+="\n";
       setTimeout(callback, 400);
     }
   }
@@ -150,7 +154,7 @@ function runCommands(index=0){
   if(index>=scripts.commands.length) return;
   const step=scripts.commands[index];
   const termObj=terminals[step.term];
-  typeCommand(termObj, "root@hunter313:~$ "+step.cmd, step.output, ()=>{ setTimeout(()=>runCommands(index+1),400); });
+  typeCommand(termObj, "root@hunter313:~$ "+step.cmd, step.output, ()=>{ setTimeout(()=>runCommands(index+1),400); }, step.isSkills );
 }
 
 function startTerminal(e){
@@ -164,7 +168,7 @@ function startTerminal(e){
 
 function resetTerminal(e){
   if(e.key!=="Enter") return;
-  Object.values(terminals).forEach(t=>t.output="", t=>t.el.innerHTML="");
+  Object.values(terminals).forEach(t=>{ t.output=""; t.el.innerHTML=""; });
   setTimeout(()=>runBoot(),500);
 }
 
