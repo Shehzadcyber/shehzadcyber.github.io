@@ -23,75 +23,81 @@
 <audio id="beep-sound" src="sound/beep.mp3" preload="auto"></audio>
 
 <script>
-const lines = [
-  "[BOOT] Initializing cyber terminal...",
-  "[OK] Loading user profile: shehzadcyber",
-  "[OK] Establishing secure shell...",
-  "[OK] Access granted!",
-  "",
-  ">> whoami",
-  "Shehzad Ali | Cybersecurity Researcher | Penetration Tester | Bug Bounty Hunter",
-  "",
-  ">> cat skills.txt",
-  "Web App Security, Mobile Security, Cloud, AI/LLM Pentest, Network Security",
-  "Currently learning Web3 & Next-Gen Security",
-  "",
-  ">> ls projects/",
-  "1. JS Endpoint Extractor",
-  "2. AI-Powered Pentest Toolkit",
-  "3. Web3 Security Analyzer",
-  "",
-  ">> contact_me --pentest",
-  "Email: shehzadinfosec@gmail.com",
-  "X: https://x.com/TheRoyHunter313",
-  "LinkedIn: https://www.linkedin.com/in/shehzadali1337/",
-  "",
-  "[SYSTEM] Process complete."
+const script = [
+  { type: "system", text: "[BOOT] Initializing cyber terminal..." },
+  { type: "system", text: "[OK] Loading user profile: shehzadcyber" },
+  { type: "system", text: "[OK] Establishing secure shell..." },
+  { type: "system", text: "[OK] Access granted!" },
+  { type: "command", text: "whoami", output: "Shehzad Ali | Cybersecurity Researcher | Penetration Tester | Bug Bounty Hunter" },
+  { type: "command", text: "cat skills.txt", output: "Web App Security, Mobile Security, Cloud, AI/LLM Pentest, Network Security\nCurrently learning Web3 & Next-Gen Security" },
+  { type: "command", text: "ls projects/", output: "1. JS Endpoint Extractor\n2. AI-Powered Pentest Toolkit\n3. Web3 Security Analyzer" },
+  { type: "command", text: "contact_me --pentest", output: "Email: shehzadinfosec@gmail.com\nX: https://x.com/TheRoyHunter313\nLinkedIn: https://www.linkedin.com/in/shehzadali1337/" },
+  { type: "system", text: "[SYSTEM] Process complete." }
 ];
 
-let lineIndex=0, charIndex=0, output="";
+let stepIndex = 0, charIndex = 0, output = "";
 const term = document.getElementById("terminal");
 const tSound = document.getElementById("type-sound");
 const bSound = document.getElementById("beep-sound");
 
-function typeNextChar(){
-  if(lineIndex < lines.length){
-    const full = lines[lineIndex];
-    if(charIndex < full.length){
-      output += full[charIndex++];
-      term.innerHTML = output + '<span class="cursor"></span>';
-      if (tSound.paused) { tSound.currentTime=0; tSound.play(); }
-      setTimeout(typeNextChar, 30 + Math.random()*70);
-    } else {
-      output += "\n";
-      lineIndex++; charIndex=0;
-      tSound.pause(); setTimeout(typeNextChar, 300);
-    }
+function typeCommand(command, callback) {
+  if (charIndex < command.length) {
+    output += command[charIndex++];
+    term.innerHTML = output + '<span class="cursor"></span>';
+    if (tSound.paused) { tSound.currentTime = 0; tSound.play(); }
+    setTimeout(() => typeCommand(command, callback), 30 + Math.random() * 70);
   } else {
     tSound.pause();
+    output += "\n";
+    term.innerHTML = output + '<span class="cursor"></span>';
+    callback();
+  }
+}
+
+function runStep() {
+  if (stepIndex >= script.length) {
     output += "\nPress any key to restart...";
     term.innerHTML = output + '<span class="cursor"></span>';
     document.addEventListener("keydown", resetTerminal);
     document.addEventListener("click", resetTerminal);
+    return;
+  }
+
+  const step = script[stepIndex];
+  charIndex = 0;
+
+  if (step.type === "system") {
+    output += step.text + "\n";
+    term.innerHTML = output + '<span class="cursor"></span>';
+    stepIndex++;
+    setTimeout(runStep, 300);
+  } 
+  else if (step.type === "command") {
+    typeCommand(">> " + step.text, () => {
+      output += step.output + "\n";
+      term.innerHTML = output + '<span class="cursor"></span>';
+      stepIndex++;
+      setTimeout(runStep, 500);
+    });
   }
 }
 
-function startTerminal(){
-  document.getElementById("start-screen").style.display="none";
-  term.style.display="block";
+function startTerminal() {
+  document.getElementById("start-screen").style.display = "none";
+  term.style.display = "block";
   bSound.play();
-  setTimeout(typeNextChar, 500);
+  setTimeout(runStep, 500);
   document.removeEventListener("keydown", startTerminal);
   document.removeEventListener("click", startTerminal);
 }
 
-function resetTerminal(){
+function resetTerminal() {
   document.removeEventListener("keydown", resetTerminal);
   document.removeEventListener("click", resetTerminal);
-  output=""; lineIndex=0; charIndex=0;
-  term.innerHTML="";
+  output = ""; stepIndex = 0; charIndex = 0;
+  term.innerHTML = "";
   bSound.play();
-  setTimeout(typeNextChar, 500);
+  setTimeout(runStep, 500);
 }
 
 document.addEventListener("keydown", startTerminal);
