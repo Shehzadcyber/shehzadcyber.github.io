@@ -16,7 +16,6 @@
   .fade-in { opacity:0; animation:fadeIn 0.3s forwards; }
   @keyframes fadeIn { to { opacity:1; } }
   .glow { text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99; transition: text-shadow 0.5s ease-out; }
-  .flicker { opacity:1; }
   ul.skills-list { list-style-type: "✔ "; padding-left: 20px; }
 </style>
 </head>
@@ -90,16 +89,21 @@ function playKeySound() {
   sound.play().catch(()=>{});
 }
 
+// Fixed flicker function: updates only a temp line, then appends final line once
 function flickerMessage(term, text, callback) {
   let flickerCount = 0;
   const maxFlicker = 5;
+  const tempLine = document.createElement("div");
+  term.appendChild(tempLine);
+
   function flick() {
     if(flickerCount >= maxFlicker) {
+      tempLine.remove();
       term.innerHTML += text + "\n";
       callback();
       return;
     }
-    term.innerHTML += '<span class="flicker">' + text + '</span>\n';
+    tempLine.textContent = (Math.random() < 0.5 ? "" : text);
     flickerCount++;
     setTimeout(flick, 50 + Math.random()*100);
   }
@@ -108,15 +112,17 @@ function flickerMessage(term, text, callback) {
 
 function typeCommand(term, command, outputData, callback) {
   let charIndex = 0;
+  const cursorSpan = '<span class="cursor"></span>';
   let output = term.innerHTML;
+
   function typeChar() {
     if(charIndex < command.length) {
       output += command[charIndex++];
-      term.innerHTML = output + '<span class="cursor"></span>';
+      term.innerHTML = output + cursorSpan;
       playKeySound();
-      setTimeout(typeChar, 30 + Math.random() * 50);
+      setTimeout(typeChar, 30 + Math.random()*50);
     } else {
-      term.innerHTML = output + '<span class="cursor"></span>\n';
+      term.innerHTML = output + cursorSpan + "\n";
       if(Array.isArray(outputData)) {
         const ul = document.createElement("ul");
         ul.className = "skills-list fade-in";
@@ -147,17 +153,15 @@ function runBoot(index=0) {
 function runCommands(index=0) {
   if(index >= scripts.commands.length) { return; }
   const step = scripts.commands[index];
-  // Determine which terminal to print the command and output
   let term = terminals.commands;
   if(step.cmd.includes("projects")) term = terminals.projects;
   else if(step.cmd.includes("contact")) term = terminals.contact;
-  else if(step.cmd.includes("skills")) term = terminals.commands;
 
   typeCommand(term, "root@hunter313:~$ "+step.cmd, step.output, ()=>{ setTimeout(()=>runCommands(index+1),400); });
 }
 
 function startTerminal(e) {
-  if(e.key !== "Enter") return; // Only ENTER starts
+  if(e.key !== "Enter") return;
   document.getElementById("start-screen").style.display="none";
   Object.values(terminals).forEach(t=>t.style.display="block");
   document.removeEventListener("keydown", startTerminal);
@@ -166,7 +170,7 @@ function startTerminal(e) {
 }
 
 function resetTerminal(e) {
-  if(e.key !== "Enter") return; // Only ENTER resets
+  if(e.key !== "Enter") return;
   Object.values(terminals).forEach(t=>t.innerHTML="");
   setTimeout(()=>runBoot(),500);
 }
