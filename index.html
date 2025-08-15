@@ -5,18 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Shehzad Ali | Cybersecurity Portfolio</title>
 <style>
-  body { margin:0; background:black; color:#00ff99; font-family:'Courier New',monospace; overflow:hidden; display:flex; flex-wrap: wrap; }
-  .terminal { flex:1 1 50%; padding:20px; box-sizing:border-box; white-space:pre-wrap; line-height:1.5; font-size:1rem; border:1px solid #00ff99; height:50vh; overflow-y:auto; text-shadow:0 0 5px #00ff99; position:relative; }
-  .cursor { display:inline-block; width:10px; background-color:#00ff99; animation:blink 0.8s infinite; }
-  @keyframes blink {0%,50%,100%{background-color:#00ff99;}25%,75%{background-color:transparent;}}
-  #start-screen { position:fixed; top:0;left:0;width:100%;height:100%; background:#000; color:#00ff99;
+body { margin:0; background:black; color:#00ff99; font-family:'Courier New',monospace; overflow:hidden; display:flex; flex-wrap: wrap; }
+.terminal { flex:1 1 50%; padding:20px; box-sizing:border-box; white-space:pre-wrap; line-height:1.5; font-size:1rem; border:1px solid #00ff99; height:50vh; overflow-y:auto; text-shadow:0 0 5px #00ff99; position:relative; }
+.cursor { display:inline-block; width:10px; background-color:#00ff99; animation:blink 0.8s infinite; }
+@keyframes blink {0%,50%,100%{background-color:#00ff99;}25%,75%{background-color:transparent;}}
+#start-screen { position:fixed; top:0;left:0;width:100%;height:100%; background:#000; color:#00ff99;
     display:flex; align-items:center; justify-content:center; font-size:2rem; text-shadow:0 0 10px #00ff99;
     z-index:2; animation:fadeInOut 1.5s infinite; cursor:pointer; }
-  @keyframes fadeInOut {0%,100%{opacity:1;}50%{opacity:0;}}
-  .fade-in { opacity:0; animation:fadeIn 0.3s forwards; }
-  @keyframes fadeIn { to { opacity:1; } }
-  .glow { text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99; transition: text-shadow 0.5s ease-out; }
-  ul.skills-list { list-style-type: "✔ "; padding-left: 20px; }
+@keyframes fadeInOut {0%,100%{opacity:1;}50%{opacity:0;}}
+.fade-in { opacity:0; animation:fadeIn 0.3s forwards; }
+@keyframes fadeIn { to { opacity:1; } }
+.glow { text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99; transition: text-shadow 0.5s ease-out; }
+ul.skills-list { list-style-type: "✔ "; padding-left: 20px; }
 </style>
 </head>
 <body>
@@ -33,10 +33,10 @@
 
 <script>
 const terminals = {
-  boot: document.getElementById("terminal1"),
-  commands: document.getElementById("terminal2"),
-  projects: document.getElementById("terminal3"),
-  contact: document.getElementById("terminal4")
+  boot: { el: document.getElementById("terminal1"), output:"" },
+  commands: { el: document.getElementById("terminal2"), output:"" },
+  projects: { el: document.getElementById("terminal3"), output:"" },
+  contact: { el: document.getElementById("terminal4"), output:"" }
 };
 
 const scripts = {
@@ -47,7 +47,7 @@ const scripts = {
     "[OK] Access granted!"
   ],
   commands: [
-    { cmd: "whoami", output: "Shehzad Ali | Cybersecurity Researcher | Penetration Tester | Bug Bounty Hunter" },
+    { cmd: "whoami", output: "Shehzad Ali | Cybersecurity Researcher | Penetration Tester | Bug Bounty Hunter", term:"commands" },
     { cmd: "cat skills.txt", output: [
       "Web Application Security",
       "Mobile Application Security",
@@ -58,27 +58,22 @@ const scripts = {
       "Thick Client Applications Pentesting",
       "Red Teaming",
       "Currently learning Web3, Purple Teaming & Next-Gen Security"
-    ]},
+    ], term:"commands" },
     { cmd: "cat certificates.txt", output: [
-      "eCPPT",
-      "eWAPTX",
-      "ASCP",
-      "CEH",
-      "ASP",
-      "CAPen",
+      "eCPPT","eWAPTX","ASCP","CEH","ASP","CAPen",
       "On Progress: OSCP, CPTS, CREST Certs"
-    ]},
+    ], term:"commands" },
     { cmd: "ls projects/", output: [
       "JS Endpoint Extractor",
       "NPM-Dependency-Confusion-Attack-RCE-Payload",
       "XSS-Finder",
       "Some Projects are Under Processing"
-    ]},
+    ], term:"projects" },
     { cmd: "contact_me --pentest", output: [
       "Email: shehzadinfosec@gmail.com",
       "X: https://x.com/TheRoyHunter313",
       "LinkedIn: https://www.linkedin.com/in/shehzadali1337/"
-    ]}
+    ], term:"contact" }
   ]
 };
 
@@ -89,17 +84,17 @@ function playKeySound() {
   sound.play().catch(()=>{});
 }
 
-// Fixed flicker function: updates only a temp line, then appends final line once
-function flickerMessage(term, text, callback) {
+function flickerMessage(termObj, text, callback){
   let flickerCount = 0;
   const maxFlicker = 5;
   const tempLine = document.createElement("div");
-  term.appendChild(tempLine);
+  termObj.el.appendChild(tempLine);
 
-  function flick() {
-    if(flickerCount >= maxFlicker) {
+  function flick(){
+    if(flickerCount >= maxFlicker){
       tempLine.remove();
-      term.innerHTML += text + "\n";
+      termObj.output += text + "\n";
+      termObj.el.innerHTML = termObj.output;
       callback();
       return;
     }
@@ -110,74 +105,71 @@ function flickerMessage(term, text, callback) {
   flick();
 }
 
-function typeCommand(term, command, outputData, callback) {
-  let charIndex = 0;
-  const cursorSpan = '<span class="cursor"></span>';
-  let output = term.innerHTML;
+function typeCommand(termObj, command, outputData, callback){
+  let charIndex=0;
+  const cursorSpan='<span class="cursor"></span>';
+  let output=termObj.output;
 
-  function typeChar() {
-    if(charIndex < command.length) {
-      output += command[charIndex++];
-      term.innerHTML = output + cursorSpan;
+  function typeChar(){
+    if(charIndex<command.length){
+      output+=command[charIndex++];
+      termObj.el.innerHTML=output+cursorSpan;
       playKeySound();
-      setTimeout(typeChar, 30 + Math.random()*50);
-    } else {
-      term.innerHTML = output + cursorSpan + "\n";
-      if(Array.isArray(outputData)) {
-        const ul = document.createElement("ul");
-        ul.className = "skills-list fade-in";
-        outputData.forEach(item => {
-          const li = document.createElement("li");
-          li.textContent = item;
+      setTimeout(typeChar, 30+Math.random()*50);
+    }else{
+      termObj.output=output+"\n";
+      termObj.el.innerHTML=termObj.output;
+      // output block
+      if(Array.isArray(outputData)){
+        const ul=document.createElement("ul");
+        ul.className="skills-list fade-in";
+        outputData.forEach(item=>{
+          const li=document.createElement("li");
+          li.textContent=item;
           ul.appendChild(li);
         });
-        term.appendChild(ul);
-      } else {
-        const div = document.createElement("div");
-        div.className="fade-in";
-        div.textContent=outputData;
-        term.appendChild(div);
+        termObj.el.appendChild(ul);
+        termObj.output+="\n";
+      }else{
+        termObj.el.innerHTML+=outputData+"\n";
+        termObj.output+=outputData+"\n";
       }
-      term.innerHTML += "\n"; 
+      termObj.output+="\n";
       setTimeout(callback, 400);
     }
   }
   typeChar();
 }
 
-function runBoot(index=0) {
-  if(index >= scripts.boot.length) { runCommands(0); return; }
+function runBoot(index=0){
+  if(index>=scripts.boot.length){ runCommands(0); return; }
   flickerMessage(terminals.boot, scripts.boot[index], ()=>{ setTimeout(()=>runBoot(index+1),300); });
 }
 
-function runCommands(index=0) {
-  if(index >= scripts.commands.length) { return; }
-  const step = scripts.commands[index];
-  let term = terminals.commands;
-  if(step.cmd.includes("projects")) term = terminals.projects;
-  else if(step.cmd.includes("contact")) term = terminals.contact;
-
-  typeCommand(term, "root@hunter313:~$ "+step.cmd, step.output, ()=>{ setTimeout(()=>runCommands(index+1),400); });
+function runCommands(index=0){
+  if(index>=scripts.commands.length) return;
+  const step=scripts.commands[index];
+  const termObj=terminals[step.term];
+  typeCommand(termObj, "root@hunter313:~$ "+step.cmd, step.output, ()=>{ setTimeout(()=>runCommands(index+1),400); });
 }
 
-function startTerminal(e) {
-  if(e.key !== "Enter") return;
+function startTerminal(e){
+  if(e.key!=="Enter") return;
   document.getElementById("start-screen").style.display="none";
-  Object.values(terminals).forEach(t=>t.style.display="block");
+  Object.values(terminals).forEach(t=>t.el.style.display="block");
   document.removeEventListener("keydown", startTerminal);
   document.getElementById("beep-sound").play();
   setTimeout(()=>runBoot(),500);
 }
 
-function resetTerminal(e) {
-  if(e.key !== "Enter") return;
-  Object.values(terminals).forEach(t=>t.innerHTML="");
+function resetTerminal(e){
+  if(e.key!=="Enter") return;
+  Object.values(terminals).forEach(t=>t.output="", t=>t.el.innerHTML="");
   setTimeout(()=>runBoot(),500);
 }
 
 document.addEventListener("keydown", startTerminal);
 document.addEventListener("keydown", resetTerminal);
 </script>
-
 </body>
 </html>
