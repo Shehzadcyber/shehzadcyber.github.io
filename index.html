@@ -33,23 +33,35 @@
 <script>
 const script = [
   { type: "system", text: "[BOOT] Initializing cyber terminal..." },
-  { type: "system", text: "[OK] Loading user profile: shehzadcyber" },
+  { type: "system", text: "[OK] Loading user profile: Hunter313" },
   { type: "system", text: "[OK] Establishing secure shell..." },
   { type: "system", text: "[OK] Access granted!" },
   { type: "command", text: "whoami", output: "Shehzad Ali | Cybersecurity Researcher | Penetration Tester | Bug Bounty Hunter" },
   { type: "command", text: "cat skills.txt", output: [
       "Web Application Security",
       "Mobile Application Security",
+      "API Security",
       "Cloud Security",
-      "AI/LLM Pentesting",
       "Network Security",
+      "AI/LLM Pentesting",
       "Thick Client Applications Pentesting",
-      "Currently learning Web3 & Next-Gen Security"
+      "Red Teaming",
+      "Currently learning Web3, Purple Teaming & Next-Gen Security"
+    ] },
+  { type: "command", text: "cat certificates.txt", output: [
+      "eCPPT",
+      "eWAPTX",
+      "ASCP",
+      "CEH",
+      "ASP",
+      "CAPen",
+      "On Progress: OSCP, CPTS, CREST Certs"
     ] },
   { type: "command", text: "ls projects/", output: [
       "JS Endpoint Extractor",
-      "AI-Powered Pentest Toolkit",
-      "Web3 Security Analyzer"
+      "NPM-Dependency-Confusion-Attack-RCE-Payload",
+      "XSS-Finder",
+      "Some Projects are Under Processing"
     ] },
   { type: "command", text: "contact_me --pentest", output: [
       "Email: shehzadinfosec@gmail.com",
@@ -96,13 +108,13 @@ function typeCommand(command, callback) {
   if (charIndex < command.length) {
     output += command[charIndex++];
     term.innerHTML = output + '<span class="cursor"></span>';
-    playKeySound();
-    setTimeout(() => typeCommand(command, callback), 30 + Math.random() * 70);
+    playKeySound(); // Typing sound plays here
+    setTimeout(() => typeCommand(command, callback), 30 + Math.random() * 50);
   } else {
     // Glow effect on prompt
-    let promptIndex = output.lastIndexOf(">>");
+    let promptIndex = output.lastIndexOf("root@hunter313:");
     if (promptIndex !== -1) {
-      term.innerHTML = output.replace(/>>/g, '<span class="glow">>></span>') + '<span class="cursor"></span>';
+      term.innerHTML = output.replace(/root@hunter313:/g, '<span class="glow">root@hunter313:</span>') + '<span class="cursor"></span>';
       setTimeout(() => {
         term.innerHTML = output + '<span class="cursor"></span>';
         output += "\n\n";
@@ -133,7 +145,7 @@ function runStep() {
       setTimeout(runStep, 300);
     });
   } else if (step.type === "command") {
-    typeCommand(">> " + step.text, () => {
+    typeCommand("root@hunter313:~$ " + step.text, () => {
       setTimeout(() => {
         if (Array.isArray(step.output)) {
           const ul = document.createElement("ul");
