@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Shehzad Ali | Cybersecurity Portfolio</title>
 <style>
-  body { margin:0; background:black; color:#00ff99; font-family:'Courier New',monospace; overflow:hidden; }
-  #terminal { padding:20px; white-space:pre-wrap; line-height:1.5; font-size:1.1rem; text-shadow:0 0 5px #00ff99; display:none; }
+  body { margin:0; background:black; color:#00ff99; font-family:'Courier New',monospace; overflow:hidden; display:flex; flex-wrap: wrap; }
+  .terminal { flex:1 1 50%; padding:20px; box-sizing:border-box; white-space:pre-wrap; line-height:1.5; font-size:1rem; border:1px solid #00ff99; height:50vh; overflow-y:auto; text-shadow:0 0 5px #00ff99; position:relative; }
   .cursor { display:inline-block; width:10px; background-color:#00ff99; animation:blink 0.8s infinite; }
   @keyframes blink {0%,50%,100%{background-color:#00ff99;}25%,75%{background-color:transparent;}}
   #start-screen { position:fixed; top:0;left:0;width:100%;height:100%; background:#000; color:#00ff99;
-    display:flex; align-items:center; justify-content:center; font-size:1.5rem; text-shadow:0 0 5px #00ff99;
+    display:flex; align-items:center; justify-content:center; font-size:2rem; text-shadow:0 0 10px #00ff99;
     z-index:2; animation:fadeInOut 1.5s infinite; cursor:pointer; }
   @keyframes fadeInOut {0%,100%{opacity:1;}50%{opacity:0;}}
   .fade-in { opacity:0; animation:fadeIn 0.3s forwards; }
@@ -23,21 +23,33 @@
 <body>
 
 <div id="start-screen">Press any key to start</div>
-<div id="terminal"></div>
 
-<!-- Keystroke sound for commands -->
+<div id="terminal1" class="terminal"></div>
+<div id="terminal2" class="terminal"></div>
+<div id="terminal3" class="terminal"></div>
+<div id="terminal4" class="terminal"></div>
+
 <audio id="key-sound" src="https://assets.mixkit.co/sfx/download/mixkit-typewriter-soft-click-1125.wav" preload="auto"></audio>
-<!-- Beep sound -->
 <audio id="beep-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
 <script>
-const script = [
-  { type: "system", text: "[BOOT] Initializing cyber terminal..." },
-  { type: "system", text: "[OK] Loading user profile: Hunter313" },
-  { type: "system", text: "[OK] Establishing secure shell..." },
-  { type: "system", text: "[OK] Access granted!" },
-  { type: "command", text: "whoami", output: "Shehzad Ali | Cybersecurity Researcher | Penetration Tester | Bug Bounty Hunter" },
-  { type: "command", text: "cat skills.txt", output: [
+const terminals = {
+  boot: document.getElementById("terminal1"),
+  commands: document.getElementById("terminal2"),
+  projects: document.getElementById("terminal3"),
+  contact: document.getElementById("terminal4")
+};
+
+const scripts = {
+  boot: [
+    "[BOOT] Initializing cyber terminal...",
+    "[OK] Loading user profile: Hunter313",
+    "[OK] Establishing secure shell...",
+    "[OK] Access granted!"
+  ],
+  commands: [
+    { cmd: "whoami", output: "Shehzad Ali | Cybersecurity Researcher | Penetration Tester | Bug Bounty Hunter" },
+    { cmd: "cat skills.txt", output: [
       "Web Application Security",
       "Mobile Application Security",
       "API Security",
@@ -47,8 +59,8 @@ const script = [
       "Thick Client Applications Pentesting",
       "Red Teaming",
       "Currently learning Web3, Purple Teaming & Next-Gen Security"
-    ] },
-  { type: "command", text: "cat certificates.txt", output: [
+    ]},
+    { cmd: "cat certificates.txt", output: [
       "eCPPT",
       "eWAPTX",
       "ASCP",
@@ -56,143 +68,128 @@ const script = [
       "ASP",
       "CAPen",
       "On Progress: OSCP, CPTS, CREST Certs"
-    ] },
-  { type: "command", text: "ls projects/", output: [
-      "JS Endpoint Extractor",
-      "NPM-Dependency-Confusion-Attack-RCE-Payload",
-      "XSS-Finder",
-      "Some Projects are Under Processing"
-    ] },
-  { type: "command", text: "contact_me --pentest", output: [
-      "Email: shehzadinfosec@gmail.com",
-      "X: https://x.com/TheRoyHunter313",
-      "LinkedIn: https://www.linkedin.com/in/shehzadali1337/"
-    ] },
-  { type: "system", text: "[SYSTEM] Process complete." }
-];
-
-let stepIndex = 0, charIndex = 0, output = "";
-const term = document.getElementById("terminal");
-const keySound = document.getElementById("key-sound");
-const bSound = document.getElementById("beep-sound");
+    ]}
+  ],
+  projects: [
+    "JS Endpoint Extractor",
+    "NPM-Dependency-Confusion-Attack-RCE-Payload",
+    "XSS-Finder",
+    "Some Projects are Under Processing"
+  ],
+  contact: [
+    "Email: shehzadinfosec@gmail.com",
+    "X: https://x.com/TheRoyHunter313",
+    "LinkedIn: https://www.linkedin.com/in/shehzadali1337/"
+  ]
+};
 
 function playKeySound() {
-  const sound = keySound.cloneNode();
+  const sound = document.getElementById("key-sound").cloneNode();
   sound.playbackRate = 0.9 + Math.random() * 0.3;
   sound.volume = 0.4;
   sound.play().catch(()=>{});
 }
 
-// Flicker effect for system messages
-function flickerMessage(text, callback) {
+function flickerMessage(term, text, callback) {
   let flickerCount = 0;
   const maxFlicker = 5;
+  let output = "";
   function flick() {
-    if (flickerCount >= maxFlicker) {
-      output += text + "\n";
-      term.innerHTML = output + '<span class="cursor"></span>';
+    if(flickerCount >= maxFlicker) {
+      term.innerHTML += text + "\n";
       callback();
       return;
     }
-    term.innerHTML = output + '<span class="flicker">' + text + '</span>\n<span class="cursor"></span>';
+    term.innerHTML += '<span class="flicker">' + text + '</span>\n';
     flickerCount++;
-    setTimeout(() => {
-      term.innerHTML = output + '<span class="cursor"></span>';
-      setTimeout(flick, 50 + Math.random()*100);
-    }, 50 + Math.random()*100);
+    setTimeout(flick, 50 + Math.random()*100);
   }
   flick();
 }
 
-function typeCommand(command, callback) {
-  if (charIndex < command.length) {
-    output += command[charIndex++];
-    term.innerHTML = output + '<span class="cursor"></span>';
-    playKeySound(); // Typing sound plays here
-    setTimeout(() => typeCommand(command, callback), 30 + Math.random() * 50);
-  } else {
-    // Glow effect on prompt
-    let promptIndex = output.lastIndexOf("root@hunter313:");
-    if (promptIndex !== -1) {
-      term.innerHTML = output.replace(/root@hunter313:/g, '<span class="glow">root@hunter313:</span>') + '<span class="cursor"></span>';
-      setTimeout(() => {
-        term.innerHTML = output + '<span class="cursor"></span>';
-        output += "\n\n";
-        callback();
-      }, 400);
+function typeCommand(term, command, outputData, callback) {
+  let charIndex = 0;
+  let output = "";
+  function typeChar() {
+    if(charIndex < command.length) {
+      output += command[charIndex++];
+      term.innerHTML = output + '<span class="cursor"></span>';
+      playKeySound();
+      setTimeout(typeChar, 30 + Math.random() * 50);
     } else {
-      output += "\n\n";
-      callback();
+      term.innerHTML = output + '<span class="cursor"></span>\n\n';
+      if(Array.isArray(outputData)) {
+        const ul = document.createElement("ul");
+        ul.className = "skills-list fade-in";
+        outputData.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          ul.appendChild(li);
+        });
+        term.appendChild(ul);
+      } else {
+        const div = document.createElement("div");
+        div.className = "fade-in";
+        div.textContent = outputData;
+        term.appendChild(div);
+      }
+      setTimeout(callback, 400);
     }
   }
+  typeChar();
 }
 
-function runStep() {
-  if (stepIndex >= script.length) {
-    output += "\nPress any key to restart...";
-    term.innerHTML = output + '<span class="cursor"></span>';
-    document.addEventListener("keydown", resetTerminal);
-    document.addEventListener("click", resetTerminal);
-    return;
-  }
+function runBoot(index=0) {
+  if(index >= scripts.boot.length) { runCommands(0); return; }
+  flickerMessage(terminals.boot, scripts.boot[index], ()=>{ setTimeout(()=>runBoot(index+1),300); });
+}
 
-  const step = script[stepIndex];
-  charIndex = 0;
+function runCommands(index=0) {
+  if(index >= scripts.commands.length) { runProjects(); return; }
+  const step = scripts.commands[index];
+  typeCommand(terminals.commands, "root@hunter313:~$ "+step.cmd, step.output, ()=>{ setTimeout(()=>runCommands(index+1),400); });
+}
 
-  if (step.type === "system") {
-    flickerMessage(step.text, () => {
-      stepIndex++;
-      setTimeout(runStep, 300);
-    });
-  } else if (step.type === "command") {
-    typeCommand("root@hunter313:~$ " + step.text, () => {
-      setTimeout(() => {
-        if (Array.isArray(step.output)) {
-          const ul = document.createElement("ul");
-          ul.className = "skills-list fade-in";
-          step.output.forEach(skill => {
-            const li = document.createElement("li");
-            li.textContent = skill;
-            ul.appendChild(li);
-          });
-          term.appendChild(ul);
-          output += step.output.join("\n") + "\n\n";
-        } else {
-          const fadeLine = document.createElement("div");
-          fadeLine.classList.add("fade-in");
-          fadeLine.style.marginBottom = "5px";
-          fadeLine.textContent = step.output;
-          term.appendChild(fadeLine);
-          output += step.output + "\n\n";
-        }
-        stepIndex++;
-        setTimeout(runStep, 500);
-      }, 200);
-    });
-  }
+function runProjects() {
+  const term = terminals.projects;
+  scripts.projects.forEach(p=>{
+    const div = document.createElement("div");
+    div.className="fade-in";
+    div.textContent=p;
+    term.appendChild(div);
+  });
+  setTimeout(runContact,500);
+}
+
+function runContact() {
+  const term = terminals.contact;
+  scripts.contact.forEach(c=>{
+    const div = document.createElement("div");
+    div.className="fade-in";
+    div.textContent=c;
+    term.appendChild(div);
+  });
+  setTimeout(()=>{term.innerHTML += "\nPress any key to restart...<span class='cursor'></span>"; document.addEventListener("keydown", resetTerminal); document.addEventListener("click", resetTerminal); }, 500);
 }
 
 function startTerminal() {
-  document.getElementById("start-screen").style.display = "none";
-  term.style.display = "block";
-  bSound.play();
-  setTimeout(runStep, 500);
+  document.getElementById("start-screen").style.display="none";
+  Object.values(terminals).forEach(t=>t.style.display="block");
   document.removeEventListener("keydown", startTerminal);
   document.removeEventListener("click", startTerminal);
+  document.getElementById("beep-sound").play();
+  setTimeout(()=>runBoot(),500);
 }
 
 function resetTerminal() {
   document.removeEventListener("keydown", resetTerminal);
   document.removeEventListener("click", resetTerminal);
-  output = ""; stepIndex = 0; charIndex = 0;
-  term.innerHTML = "";
-  bSound.play();
-  setTimeout(runStep, 500);
+  Object.values(terminals).forEach(t=>t.innerHTML="");
+  setTimeout(()=>runBoot(),500);
 }
 
 document.addEventListener("keydown", startTerminal);
 document.addEventListener("click", startTerminal);
 </script>
-
 </body>
 </html>
