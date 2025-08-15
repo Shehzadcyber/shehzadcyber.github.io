@@ -64,10 +64,10 @@
 <div id="start-screen">Press any key to start</div>
 <div id="terminal"></div>
 
+<audio id="type-sound" src="https://www.soundjay.com/mechanical/keyboard-1.mp3" preload="auto"></audio>
 <audio id="beep-sound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
 
 <script>
-// ===== Boot Sequence =====
 const bootSequence = [
     "[BOOT] Initializing cyber terminal...",
     "[OK] Loading user profile: shehzadcyber",
@@ -107,42 +107,70 @@ const bootSequence = [
     "💼 LinkedIn: https://www.linkedin.com/in/shehzadali1337/",
     "💻 GitHub: https://github.com/shehzadcyber",
     "",
-    "[SYSTEM] Session will loop. Press CTRL+C to exit..."
+    "[SYSTEM] Process complete."
 ];
 
-let index = 0;
+let lineIndex = 0;
+let charIndex = 0;
 let text = "";
-const typeSound = document.getElementById("type-sound");
+let typing = false;
 
-function typeLine() {
-    if (index < bootSequence.length) {
-        text += bootSequence[index] + "\n";
-        document.getElementById("terminal").innerHTML = text + '<span class="cursor"></span>';
-        typeSound.currentTime = 0;
-        typeSound.play();
-        index++;
-        setTimeout(typeLine, 500);
+const terminal = document.getElementById("terminal");
+const typeSound = document.getElementById("type-sound");
+const beepSound = document.getElementById("beep-sound");
+
+function typeCharacter() {
+    if (lineIndex < bootSequence.length) {
+        typing = true;
+        let line = bootSequence[lineIndex];
+        if (charIndex < line.length) {
+            text += line[charIndex];
+            terminal.innerHTML = text + '<span class="cursor"></span>';
+            charIndex++;
+            if (typeSound.paused) {
+                typeSound.currentTime = 0;
+                typeSound.play();
+            }
+            setTimeout(typeCharacter, 50);
+        } else {
+            text += "\n";
+            lineIndex++;
+            charIndex = 0;
+            setTimeout(typeCharacter, 300);
+        }
     } else {
-        index = 0;
-        setTimeout(() => {
-            text = "";
-            typeLine();
-        }, 5000);
+        typing = false;
+        typeSound.pause();
+        typeSound.currentTime = 0;
+        text += "\nPress any key to restart...";
+        terminal.innerHTML = text + '<span class="cursor"></span>';
+        document.addEventListener("keydown", restartProcess);
+        document.addEventListener("click", restartProcess);
     }
 }
 
-// ===== Start Screen Event =====
-document.addEventListener("keydown", startTerminal);
-document.addEventListener("click", startTerminal);
-
 function startTerminal() {
     document.getElementById("start-screen").style.display = "none";
-    document.getElementById("terminal").style.display = "block";
-    document.getElementById("beep-sound").play();
-    setTimeout(typeLine, 500);
+    terminal.style.display = "block";
+    beepSound.play();
+    setTimeout(typeCharacter, 500);
     document.removeEventListener("keydown", startTerminal);
     document.removeEventListener("click", startTerminal);
 }
+
+function restartProcess() {
+    document.removeEventListener("keydown", restartProcess);
+    document.removeEventListener("click", restartProcess);
+    text = "";
+    lineIndex = 0;
+    charIndex = 0;
+    terminal.innerHTML = "";
+    beepSound.play();
+    setTimeout(typeCharacter, 500);
+}
+
+document.addEventListener("keydown", startTerminal);
+document.addEventListener("click", startTerminal);
 </script>
 
 </body>
