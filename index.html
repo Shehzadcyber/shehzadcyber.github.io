@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Intro</title>
+    <style>
+         body {
+  background: #0f111a;
+  color: #00ff9c;
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.terminal {
+  background: #1a1c2c;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 600px;
+  box-shadow: 0px 0px 15px rgba(0, 255, 156, 0.5);
+}
+
+.terminal-header {
+  background: #2d2f4a;
+  padding: 5px;
+  display: flex;
+  gap: 5px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.red { background: #ff5f56; }
+.yellow { background: #ffbd2e; }
+.green { background: #27c93f; }
+
+.terminal-body {
+  padding: 20px;
+  font-size: 18px;
+  white-space: pre-wrap;
+  min-height: 250px;
+}
+
+.cursor {
+  display: inline-block;
+  background: #00ff9c;
+  width: 10px;
+  margin-left: 2px;
+  animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+    </style>
+</head>
+<body>
+    <div class="terminal" id="terminal"></div>
+    <div class="terminal">
+  <div class="terminal-header">
+    <span class="dot red"></span>
+    <span class="dot yellow"></span>
+    <span class="dot green"></span>
+  </div>
+  <div class="terminal-body">
+    <span id="typed-text"></span><span class="cursor">█</span>
+  </div>
+</div>
+
+    <script>
+         const messages = [
+  `$ whoami\n> Shehzad Ali\n`,
+  `$ cat about.txt\n> Penetration Tester | Cybersecurity Researcher | Bug Bounty Hunter\n`,
+  `$ ./skills.sh\n> Web, Mobile, API, AI/LLM Pentesting, Network, Cloud, Web3 Security\n`,
+  `$ exit\n`
+];
+
+let msgIndex = 0;
+let charIndex = 0;
+let typingSpeed = 50;
+let deleting = false;
+
+function typeEffect() {
+  const typedText = document.getElementById("typed-text");
+
+  if (!deleting && charIndex < messages[msgIndex].length) {
+    typedText.textContent += messages[msgIndex].charAt(charIndex);
+    charIndex++;
+    setTimeout(typeEffect, typingSpeed);
+  } 
+  else if (!deleting && charIndex === messages[msgIndex].length) {
+    deleting = true;
+    setTimeout(typeEffect, 1500);
+  }
+  else if (deleting && charIndex > 0) {
+    typedText.textContent = messages[msgIndex].substring(0, charIndex - 1);
+    charIndex--;
+    setTimeout(typeEffect, typingSpeed / 2);
+  }
+  else if (deleting && charIndex === 0) {
+    deleting = false;
+    msgIndex = (msgIndex + 1) % messages.length;
+    setTimeout(typeEffect, 500);
+  }
+}
+
+window.onload = typeEffect;
+
+
+    </script>
+  
+</body>
+</html>
