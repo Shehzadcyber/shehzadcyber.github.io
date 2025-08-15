@@ -15,6 +15,8 @@
   @keyframes fadeInOut {0%,100%{opacity:1;}50%{opacity:0;}}
   .fade-in { opacity:0; animation:fadeIn 0.3s forwards; }
   @keyframes fadeIn { to { opacity:1; } }
+  .glow { text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99; transition: text-shadow 0.5s ease-out; }
+  ul.skills-list { list-style-type: "✔ "; padding-left: 20px; }
 </style>
 </head>
 <body>
@@ -22,8 +24,8 @@
 <div id="start-screen">Press any key to start</div>
 <div id="terminal"></div>
 
-<!-- Keystroke sound -->
-<audio id="key-sound" src="https://github.com/naptha/talkie/raw/master/sounds/keyboard.mp3" preload="auto"></audio>
+<!-- Keystroke sound (short click) -->
+<audio id="key-sound" src="https://assets.mixkit.co/sfx/download/mixkit-typewriter-soft-click-1125.wav" preload="auto"></audio>
 <!-- Beep sound -->
 <audio id="beep-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
@@ -34,9 +36,25 @@ const script = [
   { type: "system", text: "[OK] Establishing secure shell..." },
   { type: "system", text: "[OK] Access granted!" },
   { type: "command", text: "whoami", output: "Shehzad Ali | Cybersecurity Researcher | Penetration Tester | Bug Bounty Hunter" },
-  { type: "command", text: "cat skills.txt", output: "Web App Security, Mobile Security, Cloud, AI/LLM Pentest, Network Security\nCurrently learning Web3 & Next-Gen Security" },
-  { type: "command", text: "ls projects/", output: "1. JS Endpoint Extractor\n2. AI-Powered Pentest Toolkit\n3. Web3 Security Analyzer" },
-  { type: "command", text: "contact_me --pentest", output: "Email: shehzadinfosec@gmail.com\nX: https://x.com/TheRoyHunter313\nLinkedIn: https://www.linkedin.com/in/shehzadali1337/" },
+  { type: "command", text: "cat skills.txt", output: [
+      "Web Application Security",
+      "Mobile Application Security",
+      "Cloud Security",
+      "AI/LLM Pentesting",
+      "Network Security",
+      "Thick Client Applications Pentesting",
+      "Currently learning Web3 & Next-Gen Security"
+    ] },
+  { type: "command", text: "ls projects/", output: [
+      "JS Endpoint Extractor",
+      "AI-Powered Pentest Toolkit",
+      "Web3 Security Analyzer"
+    ] },
+  { type: "command", text: "contact_me --pentest", output: [
+      "Email: shehzadinfosec@gmail.com",
+      "X: https://x.com/TheRoyHunter313",
+      "LinkedIn: https://www.linkedin.com/in/shehzadali1337/"
+    ] },
   { type: "system", text: "[SYSTEM] Process complete." }
 ];
 
@@ -46,10 +64,10 @@ const keySound = document.getElementById("key-sound");
 const bSound = document.getElementById("beep-sound");
 
 function playKeySound() {
-  const sound = keySound.cloneNode(); // clone so multiple can overlap
-  sound.playbackRate = 0.9 + Math.random() * 0.3; // random pitch
+  const sound = keySound.cloneNode();
+  sound.playbackRate = 0.9 + Math.random() * 0.3;
   sound.volume = 0.4;
-  sound.play();
+  sound.play().catch(()=>{});
 }
 
 function typeCommand(command, callback) {
@@ -59,9 +77,19 @@ function typeCommand(command, callback) {
     playKeySound();
     setTimeout(() => typeCommand(command, callback), 30 + Math.random() * 70);
   } else {
-    output += "\n\n";
-    term.innerHTML = output + '<span class="cursor"></span>';
-    callback();
+    // Add glow effect to prompt
+    let promptIndex = output.lastIndexOf(">>");
+    if (promptIndex !== -1) {
+      term.innerHTML = output.replace(/>>/g, '<span class="glow">>></span>') + '<span class="cursor"></span>';
+      setTimeout(() => {
+        term.innerHTML = output + '<span class="cursor"></span>';
+        output += "\n\n";
+        callback();
+      }, 400);
+    } else {
+      output += "\n\n";
+      callback();
+    }
   }
 }
 
@@ -86,15 +114,24 @@ function runStep() {
   else if (step.type === "command") {
     typeCommand(">> " + step.text, () => {
       setTimeout(() => {
-        const lines = step.output.split("\n");
-        lines.forEach(line => {
+        if (Array.isArray(step.output)) {
+          const ul = document.createElement("ul");
+          ul.className = "skills-list fade-in";
+          step.output.forEach(skill => {
+            const li = document.createElement("li");
+            li.textContent = skill;
+            ul.appendChild(li);
+          });
+          term.appendChild(ul);
+          output += step.output.join("\n") + "\n\n";
+        } else {
           const fadeLine = document.createElement("div");
           fadeLine.classList.add("fade-in");
           fadeLine.style.marginBottom = "5px";
-          fadeLine.textContent = line;
+          fadeLine.textContent = step.output;
           term.appendChild(fadeLine);
-        });
-        output += step.output + "\n\n";
+          output += step.output + "\n\n";
+        }
         stepIndex++;
         setTimeout(runStep, 500);
       }, 200);
